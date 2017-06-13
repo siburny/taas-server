@@ -3,14 +3,14 @@
 
 var http       = require('http')
   , https      = require('https')
-  , md5        = require('MD5')
+  , md5        = require('md5')
   , net        = require('net')
   , portfinder = require('portfinder')
   , url        = require('url')
   ;
 
 
-var maxport    = 1025;
+var maxport    = 40000;
 var pairings   = {};
 var responders = {};
 var listeners  = {};
@@ -183,7 +183,7 @@ exports.listen = function(options) {
             if (errorP) options.logger.error(tag, { event: 'listener close', label: label });
             else        options.logger.debug(tag, { event: 'listener close', label: label });
           });
-        }).listen(portno, options.taasHost, 1, function () {
+        }).listen(portno, "0.0.0.0", 1, function () {
           var endpoint = options.taasHost + ':' + portno;
 
           options.logger.info(tag, { event: 'listen', code: 200, endpoint: endpoint, label: label });
@@ -202,7 +202,7 @@ exports.listen = function(options) {
     });
   }).on('clientError',function(err, socket) {/* jshint unused: false */
     options.logger.info('taas', { event: 'clientError', diagnostic: err.message });
-  }).listen(options.taasPort, options.taasHost, function() {
+  }).listen(options.taasPort, "0.0.0.0", function() {
     options.logger.info('listening on http' + ((!!options.keyData) ? 's' : '') + '://' + options.taasHost + ':'
                         + options.taasPort);
   });
@@ -213,7 +213,6 @@ var listener = function(options, label, portno) {
 
   plug = net.createServer({ allowHalfOpen: true }, function(socket) {
     var responder, tag;
-
     tag = 'tcp ' + socket.remoteAddress + ' ' + socket.remotePort;
 
     responder = responders[label].shift();
@@ -221,6 +220,10 @@ var listener = function(options, label, portno) {
       options.logger.error(tag, { event: 'no responder', label: label });
       return socket.destroy();
     }
+
+    socket.on('error', function(err) {
+      options.logger.error(tag, { event: 'listener error', diagnostic: err.message, label: label });
+    });
 
     socket.setNoDelay(true);
     socket.setKeepAlive(true);
@@ -230,7 +233,7 @@ var listener = function(options, label, portno) {
     if (pairings[label].length > 100) pairings[label].splice(0,100);
 
     socket.pipe(responder.socket).pipe(socket);
-  }).listen(portno, options.taasHost, 511, function () {
+  }).listen(portno, '0.0.0.0', 511, function () {
     options.logger.info('listening on tcp://' + options.taasHost + ':' + portno + ' for ' + label);
   });
 
@@ -248,7 +251,7 @@ var client = function(options, httpsT, tag, host, request, response) {
   }
 
   if (!responders[label]) {
-    options.logger.info(tag, { event: 'no responders', code: 503, host: request.headers.host });
+    options.logger.info(tag, { event: 'no responders', code: 503, host: request.headers.host, label: label });
     response.writeHead(503);
     return response.end();
   }
@@ -284,10 +287,10 @@ var client = function(options, httpsT, tag, host, request, response) {
       if (pairings[label].length > 100) pairings[label].splice(0,100);
 
       socket.pipe(responder.socket).pipe(socket);
-    }).listen(portno, options.taasHost, 511, function () {
+    }).listen(portno, '0.0.0.0', 511, function () {
       var location = httpsT + '://' + host + ':' + portno;
 
-      if (!!u.pathname) location += u.pathname;
+      if (!!u.path) location += u.path;
       if (!!u.hash)     location += u.hash;
       options.logger.info(tag, { event: 'listen', code: 307, location: location, label: label });
 
@@ -311,6 +314,6 @@ var subdomainP = function(options, domain) {
 var nextPort = function(lastPort) {
   maxport = lastPort + 1;
 
-  if ((maxport < 1025) || (maxport > 60000)) maxport = 1025;
   maxport += Math.round(Math.random() * 2048);
+  if ((maxport < 40000) || (maxport > 60000)) maxport = 40000;
 };
