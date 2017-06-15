@@ -18,17 +18,14 @@
     "node"         : ">=0.10"
   }
 , "dependencies"   : {
-    "md5"          : "2.0"
+    "md5"          : "^2.0"
   , "bcrypt"       : "1.0"
-  , "minimatch"    : "0.2.12"
-  , "mqtt"         : "0.3.3"
   , "nedis"        : "0.1.0"
-  , "node-uuid"    : "1.4.0"
-  , "portfinder"   : "0.2.1"
-  , "redis"        : "0.8.x"
+  , "uuid-parse"   : "^1.0"
+  , "portfinder"   : "^1.0"
+  , "redis"        : "^2.0"
   , "speakeasy"    : "git://github.com/TheThingSystem/speakeasy.git"
-  , "winston"      : "0.7.x"
-  , "x509-keygen"  : "0.2.2"
+  , "winston"      : "^2.0"
   }
 , "readmeFilename" : "README.md"
 }

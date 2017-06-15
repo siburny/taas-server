@@ -4,7 +4,7 @@ var bcrypt    = require('bcrypt')
   , redis     = require('redis')
   , speakeasy = require('speakeasy')
   , url       = require('url')
-  , uuidX     = require('node-uuid')
+  , uuidX     = require('uuid-parse')
   , options   = require('./vps').options
   ;
 
@@ -14,9 +14,11 @@ if (options.redisHost === '127.0.0.1') {
 }
 
 var client = redis.createClient(options.redisPort, options.redisHost, { parser: 'javascript' });
-client.auth(options.redisAuth, function(err) {
-  if (err) throw err;
-});
+if(!!options.redisAuth) {
+	client.auth(options.redisAuth, function(err) {
+		if (err) throw err;
+	});
+}
 
 var listenP = false;
 client.on('ready', function() {
@@ -254,7 +256,6 @@ var create_uuid = function(label, labels, uuid, cb) {
     data.params.labels = labels;
     data.params.server = { hostname : options.taasHost
                          , port     : options.taasPort
-                         , ca       : options.crtData
                          };
 
     fs.writeFile(uuid + '.js', 'exports.params = ' + JSON.stringify(data.params) + ';\n', { mode: 0644 }, function(err) {
