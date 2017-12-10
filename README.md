@@ -1,3 +1,6 @@
+**ATTENTION**
+*I deprecated this server component in favor of LocalTunnel*
+
 TAAS-server
 ================
 Things-as-a-service for 'hidden servers' (behind firewalls/NATs) and 'mobile clients' using a third-party service.
